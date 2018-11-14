@@ -1,0 +1,43 @@
+html, body, #canvas {
+  height: 100%;
+  padding: 0;
+  margin: 0;
+}
+
+.bpmn-io-viewer-height {
+	height: 400px;
+}
+
+.bpmn-badge-info {
+  background-color: rgba(66, 180, 21, 0.7);
+  color: White;
+  border-radius: 5px;
+  font-family: Arial;
+  font-size: 12px;
+  padding: 5px;
+  min-height: 16px;
+  width: 50px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.bpmn-badge-incident {
+  background-color: rgba(255, 47, 0, 0.7);
+  color: White;
+  border-radius: 5px;
+  font-family: Arial;
+  font-size: 12px;
+  padding: 5px;
+  min-height: 16px;
+  width: 50px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.bpmn-element-active:not(.djs-connection) .djs-visual > :nth-child(1) {
+  stroke: rgba(66, 180, 21, 0.7) !important; /* color elements as red */
+}
+
+.bpmn-element-incident:not(.djs-connection) .djs-visual > :nth-child(1) {
+  stroke: rgba(255, 47, 0, 0.7) !important; /* color elements as red */
+}

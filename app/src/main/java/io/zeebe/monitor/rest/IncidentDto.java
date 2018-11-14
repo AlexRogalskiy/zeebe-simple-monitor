@@ -11,7 +11,8 @@ public class IncidentDto {
   private String errorType;
   private String errorMessage;
 
-  private boolean isResolved;
+  private String state = "";
+  private String time;
 
   public long getKey() {
     return key;
@@ -53,19 +54,27 @@ public class IncidentDto {
     this.errorMessage = errorMessage;
   }
 
-  public boolean isResolved() {
-    return isResolved;
-  }
-
-  public void setResolved(boolean isResolved) {
-    this.isResolved = isResolved;
-  }
-
   public String getActivityId() {
     return activityId;
   }
 
   public void setActivityId(String activityId) {
     this.activityId = activityId;
+  }
+
+  public String getState() {
+    return state;
+  }
+
+  public void setState(String state) {
+    this.state = state;
+  }
+
+  public String getTime() {
+    return time;
+  }
+
+  public void setTime(String time) {
+    this.time = time;
   }
 }
