@@ -10,6 +10,7 @@ import io.zeebe.monitor.repository.WorkflowInstanceRepository;
 import io.zeebe.monitor.repository.WorkflowRepository;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -22,6 +23,18 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 @Controller
 public class ViewController {
+
+  private static final List<String> WORKFLOW_INSTANCE_ENTERED_INTENTS =
+      Arrays.asList(
+          "ELEMENT_ACTIVATED", "START_EVENT_OCCURRED", "END_EVENT_OCCURRED", "GATEWAY_ACTIVATED");
+
+  private static final List<String> WORKFLOW_INSTANCE_COMPLETED_INTENTS =
+      Arrays.asList(
+          "ELEMENT_COMPLETED",
+          "ELEMENT_TERMINATED",
+          "START_EVENT_OCCURRED",
+          "END_EVENT_OCCURRED",
+          "GATEWAY_ACTIVATED");
 
   @Autowired private WorkflowRepository workflowRepository;
 
@@ -185,17 +198,14 @@ public class ViewController {
     final List<String> completedActivities =
         events
             .stream()
-            .filter(
-                e ->
-                    e.getIntent().equals("ELEMENT_COMPLETED")
-                        || e.getIntent().equals("ELEMENT_TERMINATED"))
+            .filter(e -> WORKFLOW_INSTANCE_COMPLETED_INTENTS.contains(e.getIntent()))
             .map(ActivityInstanceEntity::getActivityId)
             .collect(Collectors.toList());
 
     final List<String> activeActivities =
         events
             .stream()
-            .filter(e -> e.getIntent().equals("ELEMENT_ACTIVATED"))
+            .filter(e -> WORKFLOW_INSTANCE_ENTERED_INTENTS.contains(e.getIntent()))
             .map(ActivityInstanceEntity::getActivityId)
             .filter(id -> !completedActivities.contains(id))
             .collect(Collectors.toList());
@@ -212,10 +222,7 @@ public class ViewController {
     final Map<String, Long> completedElementsById =
         events
             .stream()
-            .filter(
-                e ->
-                    e.getIntent().equals("ELEMENT_COMPLETED")
-                        || e.getIntent().equals("ELEMENT_TERMINATED"))
+            .filter(e -> WORKFLOW_INSTANCE_COMPLETED_INTENTS.contains(e.getIntent()))
             .collect(
                 Collectors.groupingBy(
                     ActivityInstanceEntity::getActivityId, Collectors.counting()));
@@ -223,7 +230,7 @@ public class ViewController {
     final Map<String, Long> enteredElementsById =
         events
             .stream()
-            .filter(e -> e.getIntent().equals("ELEMENT_ACTIVATED"))
+            .filter(e -> WORKFLOW_INSTANCE_ENTERED_INTENTS.contains(e.getIntent()))
             .collect(
                 Collectors.groupingBy(
                     ActivityInstanceEntity::getActivityId, Collectors.counting()));

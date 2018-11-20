@@ -190,12 +190,15 @@ function addElementInstanceIncidentMarker(canvas, elementId) {
 }
 
 function addElementInstanceCounter(overlays, elemenId, active, ended) {	
+
+		var style = ((active > 0) ? "bpmn-badge-active" : "bpmn-badge-inactive");
+
 		overlays.add(elemenId, {
 		  position: {
-		    bottom: -5,
+		    top: -25,
   			left: 0
 		  },
-		  html: '<span class="bpmn-badge-info" data-toggle="tooltip" data-placement="bottom" title="active | ended">' 
+		  html: '<span class="' + style + '" data-toggle="tooltip" data-placement="bottom" title="active | ended">' 
 		  				+ active + ' | ' + ended 
 		  				+ '</span>'
 		});
