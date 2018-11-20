@@ -11,6 +11,7 @@ import io.zeebe.monitor.repository.WorkflowRepository;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -115,7 +116,7 @@ public class ViewController {
     dto.setWorkflowKey(instance.getWorkflowKey());
 
     final boolean isEnded = instance.getEnd() != null && instance.getEnd() > 0;
-    dto.setState(isEnded ? "Ended" : "Running");
+    dto.setState(instance.getState());
 
     dto.setStartTime(Instant.ofEpochMilli(instance.getStart()).toString());
 
@@ -186,7 +187,7 @@ public class ViewController {
     dto.setVersion(instance.getVersion());
 
     final boolean isEnded = instance.getEnd() != null && instance.getEnd() > 0;
-    dto.setState(isEnded ? "Ended" : "Running");
+    dto.setState(instance.getState());
     dto.setRunning(!isEnded);
 
     dto.setStartTime(Instant.ofEpochMilli(instance.getStart()).toString());
@@ -283,66 +284,47 @@ public class ViewController {
                 false)
             .collect(Collectors.toList());
 
-    incidents
-        .stream()
-        .collect(Collectors.groupingBy(IncidentEntity::getIncidentKey))
-        .entrySet()
-        .stream()
-        .forEach(
-            i -> {
-              final Long incidentKey = i.getKey();
+    final Map<Long, String> elementIdsForKeys = new HashMap<>();
+    events.forEach(e -> elementIdsForKeys.put(e.getKey(), e.getActivityId()));
 
-              final List<IncidentEntity> incidentEvents = i.getValue();
-              final IncidentEntity lastIncidentEvent =
-                  incidentEvents.get(incidentEvents.size() - 1);
+    final List<IncidentDto> incidentDtos =
+        incidents
+            .stream()
+            .map(
+                i -> {
+                  final Long incidentKey = i.getIncidentKey();
 
-              final IncidentDto incidentDto = new IncidentDto();
-              incidentDto.setKey(incidentKey);
+                  final IncidentDto incidentDto = new IncidentDto();
+                  incidentDto.setKey(incidentKey);
 
-              events
-                  .stream()
-                  .filter(e -> e.getKey() == lastIncidentEvent.getActivityInstanceKey())
-                  .findFirst()
-                  .ifPresent(
-                      e -> {
-                        incidentDto.setActivityId(e.getActivityId());
-                      });
+                  incidentDto.setActivityId(elementIdsForKeys.get(i.getActivityInstanceKey()));
+                  incidentDto.setActivityInstanceKey(i.getActivityInstanceKey());
+                  incidentDto.setJobKey(i.getJobKey());
+                  incidentDto.setErrorType(i.getErrorType());
+                  incidentDto.setErrorMessage(i.getErrorMessage());
 
-              incidentDto.setActivityInstanceKey(lastIncidentEvent.getActivityInstanceKey());
-              incidentDto.setJobKey(lastIncidentEvent.getJobKey());
-              incidentDto.setErrorType(lastIncidentEvent.getErrorType());
-              incidentDto.setErrorMessage(lastIncidentEvent.getErrorMessage());
+                  final boolean isResolved = i.getResolved() != null && i.getResolved() > 0;
 
-              incidentDto.setState(lastIncidentEvent.getIntent());
-              incidentDto.setTime(
-                  Instant.ofEpochMilli(lastIncidentEvent.getTimestamp()).toString());
+                  incidentDto.setCreatedTime(Instant.ofEpochMilli(i.getCreated()).toString());
 
-              dto.getIncidents().add(incidentDto);
-            });
+                  if (isResolved) {
+                    incidentDto.setResolvedTime(Instant.ofEpochMilli(i.getResolved()).toString());
+
+                    incidentDto.setState("Resolved");
+                  } else {
+                    incidentDto.setState("Created");
+                  }
+
+                  return incidentDto;
+                })
+            .collect(Collectors.toList());
+    dto.setIncidents(incidentDtos);
 
     final List<String> activitiesWitIncidents =
         incidents
             .stream()
-            .collect(Collectors.groupingBy(IncidentEntity::getActivityInstanceKey))
-            .entrySet()
-            .stream()
-            .filter(
-                i -> {
-                  final List<IncidentEntity> incidentEvents = i.getValue();
-                  final IncidentEntity lastIncidentEvent =
-                      incidentEvents.get(incidentEvents.size() - 1);
-
-                  return lastIncidentEvent.getIntent().equals("CREATED");
-                })
-            .map(
-                i -> {
-                  return events
-                      .stream()
-                      .filter(e -> e.getKey() == i.getKey())
-                      .findFirst()
-                      .map(ActivityInstanceEntity::getActivityId)
-                      .orElse("");
-                })
+            .filter(i -> i.getResolved() == null || i.getResolved() < 0)
+            .map(i -> elementIdsForKeys.get(i.getActivityInstanceKey()))
             .distinct()
             .collect(Collectors.toList());
 
@@ -350,6 +332,57 @@ public class ViewController {
 
     activeActivities.removeAll(activitiesWitIncidents);
     dto.setActiveActivities(activeActivities);
+
+    return dto;
+  }
+
+  @GetMapping("/views/incidents")
+  public String incidentList(Map<String, Object> model, Pageable pageable) {
+
+    final long count = incidentRepository.countByResolvedIsNull();
+
+    final List<IncidentListDto> incidents = new ArrayList<>();
+    for (IncidentEntity incidentEntity : incidentRepository.findByResolvedIsNull(pageable)) {
+      final IncidentListDto dto = toDto(incidentEntity);
+      incidents.add(dto);
+    }
+
+    model.put("incidents", incidents);
+    model.put("count", count);
+
+    addPaginationToModel(model, pageable, count);
+
+    return "incident-list-view";
+  }
+
+  private IncidentListDto toDto(IncidentEntity incident) {
+    final IncidentListDto dto = new IncidentListDto();
+    dto.setKey(incident.getIncidentKey());
+
+    dto.setWorkflowInstanceKey(incident.getWorkflowInstanceKey());
+
+    workflowInstanceRepository
+        .findByKey(incident.getWorkflowInstanceKey())
+        .ifPresent(
+            instance -> {
+              dto.setBpmnProcessId(instance.getBpmnProcessId());
+              dto.setWorkflowKey(instance.getWorkflowKey());
+            });
+
+    dto.setErrorType(incident.getErrorType());
+    dto.setErrorMessage(incident.getErrorMessage());
+
+    final boolean isResolved = incident.getResolved() != null && incident.getResolved() > 0;
+
+    dto.setCreatedTime(Instant.ofEpochMilli(incident.getCreated()).toString());
+
+    if (isResolved) {
+      dto.setResolvedTime(Instant.ofEpochMilli(incident.getResolved()).toString());
+
+      dto.setState("Resolved");
+    } else {
+      dto.setState("Created");
+    }
 
     return dto;
   }

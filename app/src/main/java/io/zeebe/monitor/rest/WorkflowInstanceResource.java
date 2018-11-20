@@ -62,22 +62,12 @@ public class WorkflowInstanceResource {
 
     incidents
         .stream()
-        .collect(Collectors.groupingBy(IncidentEntity::getIncidentKey))
-        .entrySet()
-        .stream()
+        .filter(i -> i.getResolved() == null || i.getResolved() < 0)
         .forEach(
-            i -> {
-              final List<IncidentEntity> incidentEvents = i.getValue();
-              final IncidentEntity lastIncidentEvent =
-                  incidentEvents.get(incidentEvents.size() - 1);
+            incident -> {
+              final long jobKey = incident.getJobKey();
 
-              final long jobKey = lastIncidentEvent.getJobKey();
-
-              final boolean isResolved =
-                  lastIncidentEvent.getIntent().equals("RESOLVED")
-                      || lastIncidentEvent.getIntent().equals("DELETED");
-
-              if (!isResolved && jobKey > 0) {
+              if (jobKey > 0) {
                 connections
                     .getClient()
                     .jobClient()

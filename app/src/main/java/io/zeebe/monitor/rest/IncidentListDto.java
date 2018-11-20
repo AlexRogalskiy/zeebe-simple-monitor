@@ -1,12 +1,12 @@
 package io.zeebe.monitor.rest;
 
-public class IncidentDto {
+public class IncidentListDto {
 
   private long key;
 
-  private String activityId;
-  private long activityInstanceKey;
-  private long jobKey;
+  private String bpmnProcessId;
+  private long workflowInstanceKey;
+  private long workflowKey;
 
   private String errorType;
   private String errorMessage;
@@ -23,22 +23,6 @@ public class IncidentDto {
     this.key = key;
   }
 
-  public long getActivityInstanceKey() {
-    return activityInstanceKey;
-  }
-
-  public void setActivityInstanceKey(long activityInstanceKey) {
-    this.activityInstanceKey = activityInstanceKey;
-  }
-
-  public long getJobKey() {
-    return jobKey;
-  }
-
-  public void setJobKey(long jobKey) {
-    this.jobKey = jobKey;
-  }
-
   public String getErrorType() {
     return errorType;
   }
@@ -53,14 +37,6 @@ public class IncidentDto {
 
   public void setErrorMessage(String errorMessage) {
     this.errorMessage = errorMessage;
-  }
-
-  public String getActivityId() {
-    return activityId;
-  }
-
-  public void setActivityId(String activityId) {
-    this.activityId = activityId;
   }
 
   public String getState() {
@@ -85,5 +61,29 @@ public class IncidentDto {
 
   public void setResolvedTime(String resolvedTime) {
     this.resolvedTime = resolvedTime;
+  }
+
+  public String getBpmnProcessId() {
+    return bpmnProcessId;
+  }
+
+  public void setBpmnProcessId(String bpmnProcessId) {
+    this.bpmnProcessId = bpmnProcessId;
+  }
+
+  public long getWorkflowInstanceKey() {
+    return workflowInstanceKey;
+  }
+
+  public void setWorkflowInstanceKey(long workflowInstanceKey) {
+    this.workflowInstanceKey = workflowInstanceKey;
+  }
+
+  public long getWorkflowKey() {
+    return workflowKey;
+  }
+
+  public void setWorkflowKey(long workflowKey) {
+    this.workflowKey = workflowKey;
   }
 }
