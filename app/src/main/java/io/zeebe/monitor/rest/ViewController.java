@@ -27,7 +27,7 @@ public class ViewController {
 
   private static final List<String> WORKFLOW_INSTANCE_ENTERED_INTENTS =
       Arrays.asList(
-          "ELEMENT_ACTIVATED", "START_EVENT_OCCURRED", "END_EVENT_OCCURRED", "GATEWAY_ACTIVATED");
+          "ELEMENT_READY", "START_EVENT_OCCURRED", "END_EVENT_OCCURRED", "GATEWAY_ACTIVATED");
 
   private static final List<String> WORKFLOW_INSTANCE_COMPLETED_INTENTS =
       Arrays.asList(

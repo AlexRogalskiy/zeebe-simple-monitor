@@ -207,7 +207,7 @@ function addElementInstanceCounter(overlays, elemenId, active, ended) {
 function addIncidentMarker(overlays, elemenId) {	
 		overlays.add(elemenId, {
 		  position: {
-		    top: -15,
+		    top: -25,
   			right: 10
 		  },
 		  html: '<span class="bpmn-badge-incident" data-toggle="tooltip" data-placement="bottom" title="incident">' 
